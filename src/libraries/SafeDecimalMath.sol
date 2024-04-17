@@ -4,29 +4,20 @@ pragma solidity ^0.8.10;
 library SafeDecimalMath {
     uint256 private constant UNIT = 10 ** 18;
 
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeDecimalMath: addition overflow");
-        return c;
+    function add(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x + y) >= x, "ds-math-add-overflow");
     }
 
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b <= a, "SafeDecimalMath: subtraction overflow");
-        uint256 c = a - b;
-        return c;
+    function sub(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require((z = x - y) <= x, "ds-math-sub-underflow");
     }
 
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        if (a == 0 || b == 0) {
-            return 0;
-        }
-        uint256 c = a * b / UNIT;
-        require(c >= a, "SafeDecimalMath: multiplication overflow");
-        return c;
+    function mul(uint256 x, uint256 y) internal pure returns (uint256 z) {
+        require(y == 0 || (z = x * y) / y == x, "ds-math-mul-overflow");
     }
 
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b > 0, "SafeDecimalMath: division by zero");
+        require(b > 0, "division by zero");
         uint256 c = a * UNIT / b;
         return c;
     }

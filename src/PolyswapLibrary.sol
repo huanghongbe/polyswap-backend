@@ -114,10 +114,9 @@ library PolyswapLibrary {
         if (amountIn == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
 
-        uint256 amountInWithFee = amountIn * 997;
-        uint256 numerator = amountInWithFee * reserveOut;
-        uint256 denominator = (reserveIn * 1000) + amountInWithFee;
-
+        uint256 amountInWithFee = amountIn.mul(997);
+        uint256 numerator = amountInWithFee.mul(reserveOut);
+        uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
         return numerator / denominator;
     }
 
@@ -149,10 +148,9 @@ library PolyswapLibrary {
         if (amountOut == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
 
-        uint256 numerator = reserveIn * amountOut * 1000;
-        uint256 denominator = (reserveOut - amountOut) * 997;
-
-        return (numerator / denominator) + 1;
+        uint256 numerator = reserveIn.mul(amountOut).mul(1000);
+        uint256 denominator = reserveOut.sub(amountOut).mul(997);
+        return (numerator / denominator).add(1);
     }
 
     function getAmountsIn(address factory, uint256 amountOut, address[] memory path)
@@ -166,7 +164,7 @@ library PolyswapLibrary {
 
         for (uint256 i = path.length - 1; i > 0; i--) {
             (uint256 reserve0, uint256 reserve1) = getReserves(factory, path[i - 1], path[i]);
-            if (isCurveBase(factory, path[i], path[i + 1])) {
+            if (isCurveBase(factory, path[i], path[i - 1])) {
                 amounts[i - 1] = getCurveBasedAmountIn(factory, path[i], path[i - 1], amounts[i], reserve0, reserve1);
             } else {
                 amounts[i - 1] = getAmountIn(amounts[i], reserve0, reserve1);
