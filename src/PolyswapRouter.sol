@@ -68,29 +68,43 @@ contract PolyswapRouter {
     }
 
     /// 放入amountIn个tokenA可以兑换多少tokenB（费率为0.003）
-    function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to)
-        public
-        returns (uint256[] memory amounts)
-    {
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        bool isConfirmed
+    ) public returns (uint256[] memory amounts) {
         amounts = PolyswapLibrary.getAmountsOut(address(factory), amountIn, path);
         if (amounts[amounts.length - 1] < amountOutMin) {
             revert InsufficientOutputAmount();
         }
-        _safeTransferFrom(path[0], msg.sender, PolyswapLibrary.pairFor(address(factory), path[0], path[1]), amounts[0]);
-        _swap(amounts, path, to);
+        if (isConfirmed) {
+            _safeTransferFrom(
+                path[0], msg.sender, PolyswapLibrary.pairFor(address(factory), path[0], path[1]), amounts[0]
+            );
+            _swap(amounts, path, to);
+        }
     }
 
     /// 想得到amountOut个tokenB需要放入多少tokenA（费率为0.003）
-    function swapTokensForExactTokens(uint256 amountOut, uint256 amountInMax, address[] calldata path, address to)
-        public
-        returns (uint256[] memory amounts)
-    {
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata path,
+        address to,
+        bool isConfirmed
+    ) public returns (uint256[] memory amounts) {
         amounts = PolyswapLibrary.getAmountsIn(address(factory), amountOut, path);
         if (amounts[amounts.length - 1] > amountInMax) {
             revert ExcessiveInputAmount();
         }
-        _safeTransferFrom(path[0], msg.sender, PolyswapLibrary.pairFor(address(factory), path[0], path[1]), amounts[0]);
-        _swap(amounts, path, to);
+        if (isConfirmed) {
+            _safeTransferFrom(
+                path[0], msg.sender, PolyswapLibrary.pairFor(address(factory), path[0], path[1]), amounts[0]
+            );
+            _swap(amounts, path, to);
+        }
     }
 
     /// 根据交易池的路由，逐个更新交易池的token数

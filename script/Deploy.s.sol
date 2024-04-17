@@ -21,9 +21,9 @@ contract Deploy is Script {
         token0.mint(msg.sender, 10 ether);
         token1.mint(msg.sender, 10 ether);
 
-        // token0.approve(address(router), 10 ether);
-        // token1.approve(address(router), 10 ether);
-        // router.addLiquidity(address(token0), address(token1), 10 ether, 10 ether, 0, 0, msg.sender, false);
+        token0.approve(address(router), 10 ether);
+        token1.approve(address(router), 10 ether);
+        router.addLiquidity(address(token0), address(token1), 1 ether, 1 ether, 0, 0, msg.sender, false);
 
         vm.stopBroadcast();
         console.log("token0 address: ", address(token0));
