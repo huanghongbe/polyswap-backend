@@ -18,12 +18,12 @@ contract Deploy is Script {
         PolyswapRouter router = new PolyswapRouter(address(factory));
         address pairAddress = factory.createPair(address(token0), address(token1), false);
         PolyswapPair pair = PolyswapPair(pairAddress);
-        token0.mint(msg.sender, 10000000 ether);
-        token1.mint(msg.sender, 10000000 ether);
+        token0.mint(msg.sender, 10 ether);
+        token1.mint(msg.sender, 10 ether);
 
-        token0.approve(address(router), 10000000 ether);
-        token1.approve(address(router), 10000000 ether);
-        router.addLiquidity(address(token0), address(token1), 9000000 ether, 9000000 ether, 0, 0, msg.sender, false);
+        token0.approve(address(router), 10 ether);
+        token1.approve(address(router), 10 ether);
+        router.addLiquidity(address(token0), address(token1), 5 ether, 5 ether, 0, 0, msg.sender, false);
 
         vm.stopBroadcast();
         console.log("token0 address: ", address(token0));

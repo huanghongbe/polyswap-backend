@@ -25,8 +25,8 @@ contract PolyswapPair is ERC20, Math {
     bool public isCurveBased;
     // curve based properties
     uint256 public a; // Amplification coefficient for the constant sum invariant
-    uint256 public d; // Amplification coefficient for the constant product invariant
-    uint256 public n; // Curvature parameter
+
+    uint256 public swapCounts;
 
     error TransferFailed();
 
@@ -52,6 +52,10 @@ contract PolyswapPair is ERC20, Math {
         token0 = token0_;
         token1 = token1_;
         isCurveBased = isCurveBased_;
+        swapCounts = 0;
+        if (isCurveBased) {
+            a = 85;
+        }
     }
 
     /// 为流动性提供者铸造LP Token
@@ -131,6 +135,7 @@ contract PolyswapPair is ERC20, Math {
         uint256 balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
         require(balance0Adjusted * balance1Adjusted >= uint256(reserve0_) * uint256(reserve1_) * (1000 ** 2));
 
+        swapCounts++;
         _update(balance0, balance1, reserve0_, reserve1_);
 
         emit Swap(msg.sender, amount0Out, amount1Out, to);
