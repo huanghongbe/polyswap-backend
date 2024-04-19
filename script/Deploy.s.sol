@@ -25,6 +25,11 @@ contract Deploy is Script {
         token1.approve(address(router), 10 ether);
         router.addLiquidity(address(token0), address(token1), 5 ether, 5 ether, 0, 0, msg.sender, false);
 
+        address[] memory path = new address[](2);
+        path[0] = address(token0);
+        path[1] = address(token1);
+        router.swapExactTokensForTokens(1 ether, 0, path, msg.sender, true);
+
         vm.stopBroadcast();
         console.log("token0 address: ", address(token0));
         console.log("token1 address: ", address(token1));
