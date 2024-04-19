@@ -39,7 +39,7 @@ contract Deploy is Script {
         token3.approve(address(router), 100 ether);
 
         router.addLiquidity(address(token0), address(token1), 50 ether, 50 ether, 0, 0, msg.sender, false);
-        router.addLiquidity(address(token1), address(token2), 50 ether, 50 ether, 0, 0, msg.sender, true);
+        router.addLiquidity(address(token2), address(token3), 50 ether, 50 ether, 0, 0, msg.sender, true);
 
         // address[] memory path = new address[](2);
         // path[0] = address(token0);
