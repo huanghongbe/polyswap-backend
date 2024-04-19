@@ -40,10 +40,10 @@ library PolyswapLibrary {
         if (amountOut == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
         uint256 newBalance = reserveOut.sub(amountOut);
-        uint256 amountIn = ((a + reserveIn).mul(amountOut)).div(newBalance.add(a));
+        uint256 amountIn = ((a + reserveIn).mul(amountOut)) / (newBalance.add(a));
         uint256 numerator = amountIn.mul(997 - extraFee);
         uint256 denominator = 1000;
-        return numerator.div(denominator);
+        return numerator / denominator;
     }
 
     function isPopular(address factoryAddress, address tokenA, address tokenB) public view returns (bool) {
@@ -63,10 +63,10 @@ library PolyswapLibrary {
         if (amountIn == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
         uint256 newBalance = reserveIn.add(amountIn);
-        uint256 amountOut = ((a + reserveOut).mul(amountIn)).div(newBalance.add(a));
+        uint256 amountOut = ((a + reserveOut).mul(amountIn)) / (newBalance.add(a));
         uint256 numerator = amountOut.mul(997 - extraFee);
         uint256 denominator = 1000;
-        return numerator.div(denominator);
+        return numerator / denominator;
     }
 
     /// 用amontIn个tokenA可以兑换出多少tokenB，手续费0.003
