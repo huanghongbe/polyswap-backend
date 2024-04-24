@@ -8,30 +8,39 @@ import "./libraries/UQ112x112.sol";
 contract PolyswapPair is ERC20, Math {
     using UQ112x112 for uint224;
 
+    // minimun liquidity, use for initial pair
     uint256 constant MINIMUM_LIQUIDITY = 1000;
-
+    // address of tokenA
     address public token0;
+    // address of tokenB
     address public token1;
 
     // 112 + 112 + 32 = 256 = 1 ethereum storage slot.
+    // reserve of tokenA
     uint112 private reserve0;
+    // reserve of tokenB
     uint112 private reserve1;
+    // timestamp of last block mined
     uint32 private blockTimestampLast;
-
+    // current price of tokenA
     uint256 public price0CumulativeLast;
+    // current price of tokenB
     uint256 public price1CumulativeLast;
 
-    // curve based
+    // is curve based
     bool public isCurveBased;
-    // curve based properties
-    uint256 public a; // Amplification coefficient for the constant sum invariant
 
+    // curve based properties
+    // Amplification coefficient for the constant sum invariant
+    uint256 public a;
+
+    // swap counts of a pair, use for extra fee
     uint256 public swapCounts;
 
     error TransferFailed();
 
-    event Burn(address indexed sender, uint256 amount0, uint256 amount1, address to); // 删除流动性
-    event Mint(address indexed sender, uint256 amount0, uint256 amount1); // 添加流动性
+    event Burn(address indexed sender, uint256 amount0, uint256 amount1, address to);
+    event Mint(address indexed sender, uint256 amount0, uint256 amount1);
     event Sync(uint256 reserve0, uint256 reserve1);
     event Swap(address indexed sender, uint256 amount0Out, uint256 amount1Out, address indexed to);
 
@@ -58,7 +67,7 @@ contract PolyswapPair is ERC20, Math {
         }
     }
 
-    /// 为流动性提供者铸造LP Token
+    /// mint LP Token
     function mint(address to) public lock returns (uint256 liquidity) {
         (uint112 reserve0_, uint112 reserve1_,) = getReserves();
         uint256 balance0 = ERC20(token0).balanceOf(address(this));
@@ -66,7 +75,6 @@ contract PolyswapPair is ERC20, Math {
         uint256 amount0 = balance0 - reserve0_;
         uint256 amount1 = balance1 - reserve1_;
 
-        /// totalSupply为0,代表首次创建交易池
         if (totalSupply == 0) {
             liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
             _mint(address(0), MINIMUM_LIQUIDITY);
@@ -83,7 +91,7 @@ contract PolyswapPair is ERC20, Math {
         emit Mint(to, amount0, amount1);
     }
 
-    /// 销毁LP Token
+    /// burn LP Token
     function burn(address to) public lock returns (uint256 amount0, uint256 amount1) {
         uint256 balance0 = ERC20(token0).balanceOf(address(this));
         uint256 balance1 = ERC20(token1).balanceOf(address(this));
@@ -108,16 +116,11 @@ contract PolyswapPair is ERC20, Math {
         emit Burn(msg.sender, amount0, amount1, to);
     }
 
-    /**
-     * todo: swap要可选流动池
-     */
     function swap(uint256 amount0Out, uint256 amount1Out, address to) public lock {
-        /// amount0Out、amount1Out表示要转给to的token数量。一般来讲一个为0一个不为0,不过闪电贷时可能都不为0.
         require(amount0Out != 0 || amount1Out != 0, "InsufficientOutputAmount");
         (uint112 reserve0_, uint112 reserve1_,) = getReserves();
         require(amount0Out < reserve0_ && amount1Out < reserve1_, "InsufficientLiquidity");
 
-        /// 先乐观的转给to，之后恒定乘积校验不通过时会回滚
         if (amount0Out > 0) _safeTransfer(token0, to, amount0Out);
         if (amount1Out > 0) _safeTransfer(token1, to, amount1Out);
 
@@ -130,7 +133,6 @@ contract PolyswapPair is ERC20, Math {
         require(amount0In != 0 || amount1In != 0);
 
         // Adjusted = balance before swap - swap fee; fee stays in the contract
-        /// 恒定乘积校验（有手续费的情况，手续费为0.003）
         uint256 balance0Adjusted = (balance0 * 1000) - (amount0In * 3);
         uint256 balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
         require(balance0Adjusted * balance1Adjusted >= uint256(reserve0_) * uint256(reserve1_) * (1000 ** 2));

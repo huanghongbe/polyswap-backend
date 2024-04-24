@@ -11,7 +11,6 @@ library PolyswapLibrary {
     error InsufficientLiquidity();
     error InvalidPath();
 
-    /// 获取交易池中的tokenA、tokenB的余额reserveA、reserveB
     function getReserves(address factoryAddress, address tokenA, address tokenB)
         public
         view
@@ -69,7 +68,6 @@ library PolyswapLibrary {
         return numerator / denominator;
     }
 
-    /// 用amontIn个tokenA可以兑换出多少tokenB，手续费0.003
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut, uint256 extraFee)
         public
         pure
@@ -77,34 +75,36 @@ library PolyswapLibrary {
     {
         if (amountIn == 0) revert InsufficientAmount();
         if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
-
+        // calculate amountIn - fee
         uint256 amountInWithFee = amountIn.mul(997 - extraFee);
         uint256 numerator = amountInWithFee.mul(reserveOut);
         uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
         return numerator / denominator;
     }
 
-    /// 交易池的路由，比如，想用tokenA换tokenC，没有AC交易池，但有AB、BC交易池，此时需要挨个兑换
     function getAmountsOut(address factory, uint256 amountIn, address[] memory path)
         public
         view
         returns (uint256[] memory)
     {
         if (path.length < 2) revert InvalidPath();
-        /// A -> B -> C，对应的兑换数量
         uint256[] memory amounts = new uint256[](path.length);
         amounts[0] = amountIn;
 
         for (uint256 i; i < path.length - 1; i++) {
+            // get current reserves of tokenA and tokenB
             (uint256 reserve0, uint256 reserve1) = getReserves(factory, path[i], path[i + 1]);
             uint256 extraFee = 0;
+            // check if is a popular pair
             if (isPopular(factory, path[i], path[i + 1])) {
                 extraFee = 1;
             }
             if (isCurveBase(factory, path[i], path[i + 1])) {
+                // get curve base amount out
                 uint256 a = getA(factory, path[i], path[i + 1]);
                 amounts[i + 1] = getCurveBasedAmountOut(amounts[i], reserve0, reserve1, extraFee, a);
             } else {
+                // get constant base amount out
                 amounts[i + 1] = getAmountOut(amounts[i], reserve0, reserve1, extraFee);
             }
         }
@@ -112,7 +112,6 @@ library PolyswapLibrary {
         return amounts;
     }
 
-    /// 想兑换amountOut个tokenB，需要放入多少tokenA，手续费0.003
     function getAmountIn(uint256 amountOut, uint256 reserveIn, uint256 reserveOut, uint256 extraFee)
         public
         pure
@@ -159,7 +158,7 @@ library PolyswapLibrary {
     function quote(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
         require(amountIn != 0, "InsufficientAmount");
         require(reserveIn != 0 && reserveOut != 0, "InsufficientLiquidity");
-        /// 给定amountIn个tokenA的情况下，需要按比例提供多少tokenB
+
         return (amountIn * reserveOut) / reserveIn;
     }
 
@@ -167,7 +166,6 @@ library PolyswapLibrary {
         return tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
     }
 
-    /// 计算交易池地址
     function pairFor(address factoryAddress, address tokenA, address tokenB)
         internal
         pure
